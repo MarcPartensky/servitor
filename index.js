@@ -1,16 +1,37 @@
 const Discord = require("discord.js");
 const { prefix, token, masters} = require("./config.json");
 const ytdl = require("ytdl-core");
+const fetch = require('node-fetch');
+const querystring = require('querystring');
+const https = require("https");
 
 const client = new Discord.Client();
 
-const queue = new Map();
+const queue = new Map(); // Music queue
 
-const reponses = [
+const jokeBaseURL = "https://sv443.net/jokeapi/v2";
+const jokeCategories = ["Programming", "Miscellaneous"];
+const jokeParams = [
+    "blacklistFlags=nsfw,religious,racist",
+    "idRange=0-100"
+];
+
+
+const answers = [
+  ["dit slt", "slt"],
+  ["test" , "tout est ok"],
+  ["nice", "well done"],
   ["tg", "ok maître je me tais"],
   ["my bad", "tkt ;)"],
+  ["je t'aime", "moi aussi je t'aime"],
+  ["qui es-tu?", "Je suis le servant de Marc conçu pour servir et obéir à mon maître et créateur Marc Partensky."],
+  // ["t'es vilain", ""],
+  ["gg", "i am the best"],
+  ["ça va?", "Nickel prêt à vous servir!"],
+  ["comment ça va?", "tout va bien"],
+  ["are you the one?" ,"https://youtu.be/dT8dmvAzIqA?t=14"],
   // ["merci", `de rien ${message.author}`]
-]
+];
 
 const playlists = [];
 
@@ -31,19 +52,81 @@ client.on("message", async message => {
     if (message.author.bot) return;
     if (!message.content.startsWith(prefix)) return;
 
-    const serverQueue = queue.get(message.guild.id);
-    if (message.content.startsWith(`${prefix}tg`)) {
-      message.channel.send("Ok maître je me tais.");
-      return;
-    } else if (message.content.startsWith(`${prefix}my bad`)) {
-        message.channel.send("tkt ;)");
+    for (const answer of answers) {
+      if (message.content.toLowerCase().startsWith(`${prefix}${answer[0]}`)) {
+        message.channel.send(`${answer[1]}`);
         return;
+      }
+    }
+    if (message.content.toLowerCase().startsWith(`${prefix}montre un chat`)) {
+    	const { file } = await fetch('https://aws.random.cat/meow').then(response => response.json());
+    	message.channel.send(file);
+      return ;
+    } else if (message.content.toLowerCase().startsWith(`${prefix}tell me a joke`)) {
+      try {
+        https.get(`${jokeBaseURL}/joke/${jokeCategories.join(",")}?${jokeParams.join("&")}`, res => {
+            res.on("data", chunk => {
+                // console.log(String.raw({raw:chunk.toString()}));
+                // console.log(chunk.toString());
+                let randomJoke = JSON.parse(chunk.toString());
+                if(randomJoke.type == "single") {
+                  message.channel.send(randomJoke.joke);
+                } else {
+                  message.channel.send(randomJoke.setup);
+                  setTimeout(() => {
+                    message.channel.send(randomJoke.delivery);
+                  }, 3000);
+              }
+            });
+            res.on("error", err => {
+                console.error(`Error: ${err}`);
+            });
+        });
+      } catch(e) {
+        message.channel.send(e.message);
+      }
+    	// const { file } = await fetch('https://sv443.net/jokeapi/v2/joke/Any').then(response => response.json());
+      // console.log(file.joke);
+    	// message.channel.send(file || "no joke here");
+      return ;
+    } else if (message.content.toLowerCase().startsWith(`${prefix}define in urban`)) {
+      const args = message.content.split(' ').slice(4);
+      if (!args.length) {
+        return message.channel.send('You need to supply a search term!');
+      }
+      const query = querystring.stringify({ term: args.join(' ') });
+      const { list } = await fetch(`https://api.urbandictionary.com/v0/define?${query}`).then(response => response.json());
+      if (!list.length) {
+        message.channel.send(`No results found for **${args.join(' ')}**.`);
+        return;
+      } else {
+        message.channel.send(list[0].definition);
+      }
     } else if (message.content.startsWith(`${prefix}merci`)) {
-        message.channel.send(`de rien ${message.author}`);
-        return;
+      message.channel.send(`de rien ${message.author}`);
+      return;
+    } else if (message.content.startsWith(`${prefix}code`)) {
+      if (message.content.includes('(') || message.content.includes(')')) {
+        message.channel.send(`Les fonctions ne sont pas autorisées.`);
+      } else {
+        message.channel.send(`${eval(message.content.split(' ')[2])}`);
+      }
+      return;
     } else if (message.content.startsWith(`${prefix}fais moi de la pub`)) {
-        message.channel.send(`${message.author} c'est le boss! Abonner vous!`);
+        message.channel.send(`${message.author} c'est le boss! Abonnez-vous!`);
         return;
+    } else if (message.content.startsWith(`${prefix}t'es vilain`)) {
+      message.channel.send("snif", {files: ["./imgs/servant t'es vilain.jpg"]});
+      return;
+    } else if (message.content.startsWith(`${prefix}assis`)) {
+      message.channel.send("ok", {files: ["./imgs/servant assis.jpg"]});
+      return;
+    } else if (message.content.startsWith(`${prefix}couché`)) {
+      message.channel.send("ok", {files: ["./imgs/servant couché.jpg"]});
+      return;
+    } else if (message.content.startsWith(`${prefix}la fessée`)) {
+      message.channel.send("naannnn", {files: ["./imgs/servant la fessée.jpg"]});
+      return;
     } else if (message.content.startsWith(`${prefix}qui suis-je?`)) {
       if (masters.includes(String(message.author))) {
         message.channel.send("Vous êtes mon maître.");
@@ -51,7 +134,11 @@ client.on("message", async message => {
         message.channel.send("Vous êtes:" + String(message.author));
       }
       return;
-    } else if (message.content.startsWith(`${prefix}play`) ||
+    }
+
+    const serverQueue = queue.get(message.guild.id);
+
+    if (message.content.startsWith(`${prefix}play`) ||
               message.content.startsWith(`${prefix}music`)) {
       execute(message, serverQueue);
       return;
