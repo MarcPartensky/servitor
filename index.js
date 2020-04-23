@@ -27,41 +27,45 @@ client.once("disconnect", () => {
 });
 
 client.on("message", async message => {
-  if (message.author.bot) return;
-  if (!message.content.startsWith(prefix)) return;
+  try {
+    if (message.author.bot) return;
+    if (!message.content.startsWith(prefix)) return;
 
-  const serverQueue = queue.get(message.guild.id);
-  if (message.content.startsWith(`${prefix}tg`)) {
-    message.channel.send("Ok maître je me tais.");
-    return;
-  } else if (message.content.startsWith(`${prefix}my bad`)) {
-      message.channel.send("tkt ;)");
+    const serverQueue = queue.get(message.guild.id);
+    if (message.content.startsWith(`${prefix}tg`)) {
+      message.channel.send("Ok maître je me tais.");
       return;
-  } else if (message.content.startsWith(`${prefix}merci`)) {
-      message.channel.send(`de rien ${message.author}`);
+    } else if (message.content.startsWith(`${prefix}my bad`)) {
+        message.channel.send("tkt ;)");
+        return;
+    } else if (message.content.startsWith(`${prefix}merci`)) {
+        message.channel.send(`de rien ${message.author}`);
+        return;
+    } else if (message.content.startsWith(`${prefix}fais moi de la pub`)) {
+        message.channel.send(`${message.author} c'est le boss! Abonner vous!`);
+        return;
+    } else if (message.content.startsWith(`${prefix}qui suis-je?`)) {
+      if (masters.includes(String(message.author))) {
+        message.channel.send("Vous êtes mon maître.");
+      } else {
+        message.channel.send("Vous êtes:" + String(message.author));
+      }
       return;
-  } else if (message.content.startsWith(`${prefix}fais moi de la pub`)) {
-      message.channel.send(`${message.author} c'est le boss! Abonner vous!`);
+    } else if (message.content.startsWith(`${prefix}play`) ||
+              message.content.startsWith(`${prefix}music`)) {
+      execute(message, serverQueue);
       return;
-  } else if (message.content.startsWith(`${prefix}qui suis-je?`)) {
-    if (masters.includes(String(message.author))) {
-      message.channel.send("Vous êtes mon maître.");
+    } else if (message.content.startsWith(`${prefix}skip`)) {
+      skip(message, serverQueue);
+      return;
+    } else if (message.content.startsWith(`${prefix}stop`)) {
+      stop(message, serverQueue);
+      return;
     } else {
-      message.channel.send("Vous êtes:" + String(message.author));
+      message.channel.send(`Mais wesh je connais pas "${message.content}" tu m'as pris pour qui?`);
     }
-    return;
-  } else if (message.content.startsWith(`${prefix}play`) ||
-            message.content.startsWith(`${prefix}music`)) {
-    execute(message, serverQueue);
-    return;
-  } else if (message.content.startsWith(`${prefix}skip`)) {
-    skip(message, serverQueue);
-    return;
-  } else if (message.content.startsWith(`${prefix}stop`)) {
-    stop(message, serverQueue);
-    return;
-  } else {
-    message.channel.send(`Mais wesh je connais pas "${message.content}" tu m'as pris pour qui?`);
+  } catch(e) {
+    message.channel.send(`Console Error "${e.message}"`);
   }
 });
 
