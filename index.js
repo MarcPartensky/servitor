@@ -8,6 +8,7 @@ const queue = new Map();
 
 const reponses = [
   ["tg", "ok maître je me tais"],
+  ["my bad", "tkt ;)"],
   // ["merci", `de rien ${message.author}`]
 ]
 
