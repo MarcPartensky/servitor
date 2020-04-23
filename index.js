@@ -65,6 +65,7 @@ client.on("message", async message => {
       message.channel.send(`Mais wesh je connais pas "${message.content}" tu m'as pris pour qui?`);
     }
   } catch(e) {
+    console.log("made it there")
     message.channel.send(`Console Error "${e.message}"`);
   }
 });
