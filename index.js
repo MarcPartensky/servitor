@@ -4,6 +4,8 @@ const ytdl = require("ytdl-core");
 const fetch = require('node-fetch');
 const querystring = require('querystring');
 const https = require("https");
+const fs = require('fs');
+
 
 const client = new Discord.Client();
 
@@ -255,5 +257,18 @@ function play(guild, song) {
   dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
   serverQueue.textChannel.send(`C'est parti pour un peu de: **${song.title}**`);
 }
+
+function recordAudio() {
+	// Create a ReadableStream of s16le PCM audio
+	const audio = connection.receiver.createStream(user, { mode: 'pcm' });
+	audio.pipe(fs.createWriteStream('user_audio'));
+	connectionB.play(audio, { type: 'opus' });
+}
+
+async function play(voiceChannel) {
+	const connection = await voiceChannel.join();
+	connection.play('audio.mp3');
+}
+
 
 client.login(token);
