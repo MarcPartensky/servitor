@@ -1,8 +1,11 @@
 FROM node:latest
 
-COPY . .
+ENV NODE_ENV=production
+
 WORKDIR .
+COPY . .
+# COPY ["package.json", "package-lock.json*", "./"]
 
-RUN npm install
+RUN npm install --production
 
-ENTRYPOINT ["npm start"]
+CMD ["npm", "start"]
